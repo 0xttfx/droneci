@@ -2,15 +2,6 @@
 Drone CI Server and Docker Runner - Installation and Configuration Best Practices for Hardened and Security in Depth
 
 
----
-Title: Drone CI Server - Hardened and Security in Depth
-Estatus Doc.: In progress
-Created by: THIAGO TORRES FAIOLI
-Date: 04-10-2025
-Time: 14:27
----
-
-
 - Execução Segura de Aplicações Docker no Rocky Linux com SELinux (Modo Enforcing)
 - Drone CI Server (`drone.example.com`) com TLS Direto
 - Conformidade: NIST SP 800-53 Rev. 5 • PCI-DSS 4.0 • LGPD Art. 46–49
@@ -37,7 +28,7 @@ graph TD
     C --> D["Systemd Service (drone.service)"]
     D --> E["Kernel Linux / SELinux (container_t)"]
     E --> F["firewalld (Zona drone)"]
-    F --> G[Internet Segmentação]
+    F --> G[Internet]
 
     classDef external fill:#E3F2FD,stroke:#1976D2,color:#0D47A1;
     classDef internal fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20;
@@ -48,7 +39,7 @@ graph TD
 >**Defesa em profundidade:** 
 >- o tráfego é filtrado pelo `firewalld`, 
 >- o container é isolado pelo **Docker + SELinux**,
->- o serviço é controlado por um **Systemd** endurecido.
+>- o serviço é controlado por um **Systemd** hardened.
 
 ---
 
@@ -111,7 +102,7 @@ sudo firewall-cmd --zone=drone --list-all
 ```
 
 >**Conformidade:**
->- **NIST SP 800-41 Rev. 1 §3.3** – defesa em profundidade.  
+>- **NIST SP 800-41 Rev. 1 3.3** – defesa em profundidade.  
 >- **PCI 1.2** – restrição de tráfego a serviços autorizados.  
 
 ---
@@ -228,7 +219,7 @@ Integração recomendada: **Prometheus + cAdvisor + Grafana**.
 >**Conformidade:**
 >- **NIST AU-6 / AU-12** – trilhas de auditoria. 
 >- **PCI 10.2** – monitoramento de acessos.  
->- **LGPD Art. 46 §1º** – registro de incidentes.
+>- **LGPD Art. 46 1º** – registro de incidentes.
 
 ---
 
@@ -247,7 +238,7 @@ Integração recomendada: **Prometheus + cAdvisor + Grafana**.
 >**Conformidade:**
 >- **NIST SI-4 (System Monitoring)** / **AU-6** – detecção de eventos anômalos.  
 >- **PCI 11.4** – detecção de intrusões.  
->- **LGPD Art. 46 §1º** – rastreabilidade de incidentes.
+>- **LGPD Art. 46 1º** – rastreabilidade de incidentes.
 
 ---
 
@@ -374,7 +365,7 @@ WantedBy=multi-user.target
 >**Conformidade:**
 >- **NIST AC-6 / SC-7 / SI-4** – privilégio mínimo, proteção de limite e monitoramento.
 >- **PCI 10.2 / 11.5** – auditoria e detecção de alterações.
->- **LGPD Art.46 §1º** – registro e rastreabilidade de incidentes.  
+>- **LGPD Art.46 1º** – registro e rastreabilidade de incidentes.  
 
 ---
 
@@ -431,6 +422,6 @@ Com isso, o ambiente tenta cumprir com o principais requisitos técnicos de **NI
 
 ---
 
-**Versão:** 1.0 • **Autor:** Thiago T. Faioli (0xTTFx) • **Data:** 2025-10-04  
-**Revisão Técnica:** 0xTTFx | Compliance Mapping NIST/PCI/LGPD
+**Versão:** 1.0 - **Autor:** Thiago T. Faioli a.k.a 0xttfx - **Data:** 2025-10-04  
+**Revisão Técnica:** 0xttfx | Compliance Mapping NIST/PCI/LGPD
 
