@@ -1,0 +1,27 @@
+---
+
+- name: "Criar diretório Drone Runner"
+  ansible.builtin.file:
+    path: "{{ drone_runner_data_dir }}"
+    state: directory
+    owner: "{{ drone_user }}"
+    group: "{{ drone_group }}"
+    mode: '0750'
+
+- name: "Gerar .env do Drone Runner"
+  ansible.builtin.template:
+    src: drone-runner.env.j2
+    dest: "{{ drone_runner_data_dir }}/.env"
+    owner: "{{ drone_user }}"
+    group: "{{ drone_group }}"
+    mode: '0600'
+
+- name: "Instalar unidade systemd do Runner"
+  ansible.builtin.template:
+    src: drone-runner.service.j2
+    dest: /etc/systemd/system/drone-runner.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reiniciar Drone Runner
+

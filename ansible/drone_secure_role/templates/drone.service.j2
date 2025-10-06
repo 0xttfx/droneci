@@ -1,0 +1,37 @@
+[Unit]
+Description=Drone CI Server
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=-{{ drone_data_dir }}/.env
+ExecStart=/usr/bin/docker run \
+  --name drone \
+  --env-file {{ drone_data_dir }}/.env \
+  --user {{ drone_user }}:{{ drone_group }} \
+  --cap-drop=ALL \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=64M \
+  --volume {{ drone_data_dir }}/data:/data:Z \
+  --volume {{ drone_data_dir }}/webroot:/data/webroot:Z \
+  --volume /etc/letsencrypt:/etc/letsencrypt:ro,Z \
+  -p 80:80 -p 443:443 \
+  {{ drone_server_image }}
+ExecStop=/usr/bin/docker stop -t 30 drone
+Restart=on-failure
+RestartSec=5
+User=root
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+SystemCallFilter=@system-service
+SELinuxContext=system_u:system_r:container_t:s0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,23 @@
+---
+# Variáveis padrão da role drone_secure
+
+drone_user: drone
+drone_group: drone
+
+drone_server_host: "drone.example.com"
+drone_server_proto: "https"
+drone_admin_email: "admin@drone.example.com"
+
+drone_server_image: "drone/drone:2"
+drone_runner_image: "drone/drone-runner-docker:1"
+
+drone_rpc_secret: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+drone_data_dir: /srv/drone
+drone_runner_data_dir: /srv/drone-runner
+
+drone_firewalld_zone: drone
+drone_allowed_ports:
+  - 80/tcp
+  - 443/tcp
+

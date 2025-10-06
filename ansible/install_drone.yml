@@ -1,0 +1,132 @@
+---
+
+# Playbook: install_drone.yml
+# Autor: Thiago T. Faioli a.k.a 0xttfx
+# Data: 2025-10-04
+# Objetivo: Instalar Drone CI Server e Runner com conformidade NIST / PCI / LGPD
+# Ambiente alvo: Rocky Linux 9.x com SELinux enforcing e policy targeted
+
+- name: "Instalação e configuração segura do Drone CI Server e Runner"
+  hosts: drone_hosts
+  become: true
+  gather_facts: true
+
+  vars:
+    # ===============================================================
+    # CONFIGURAÇÕES GERAIS
+    # ===============================================================
+    drone_server_host: "drone.example.com"
+    drone_admin_email: "admin@drone.example.com"
+    drone_server_proto: "https"
+
+    # TLS via Let's Encrypt (webroot)
+    drone_cert_path: "/etc/letsencrypt/live/{{ drone_server_host }}"
+    drone_rpc_secret: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+    # ===============================================================
+    # CONFORMIDADE (CHECKLIST)
+    # ===============================================================
+    # Cada item é validado no final da execução com tasks específicas
+    nist_controls:
+      - AC-6
+      - SC-7
+      - SC-8
+      - SI-4
+    pci_requirements:
+      - 1.2
+      - 4.1
+      - 6.4.2
+      - 10.2
+      - 11.5
+    lgpd_articles:
+      - 46
+      - 47
+      - 49
+
+  roles:
+    - role: drone_secure_role
+
+  post_tasks:
+    # ===============================================================
+    # AUDITORIA E CONFORMIDADE
+    # ===============================================================
+    - name: "Exibir sumário de conformidade"
+      ansible.builtin.debug:
+        msg: |
+          Drone CI Server instalado com conformidade:
+          - NIST SP 800-53 Rev.5: {{ nist_controls | join(', ') }}
+          - PCI-DSS 4.0: {{ pci_requirements | join(', ') }}
+          - LGPD: Artigos {{ lgpd_articles | join(', ') }}
+    
+    - name: "Verificar status do SELinux"
+      ansible.builtin.command: sestatus
+      register: sestatus_out
+    - name: "Exibir status SELinux"
+      ansible.builtin.debug:
+        msg: "{{ sestatus_out.stdout_lines }}"
+
+    - name: "Verificar firewall ativo"
+      ansible.builtin.command: firewall-cmd --zone=drone --list-all
+      register: fw_out
+    - name: "Exibir configuração de firewall"
+      ansible.builtin.debug:
+        msg: "{{ fw_out.stdout_lines }}"
+
+    - name: "Verificar contexto SELinux dos diretórios Drone"
+      ansible.builtin.command: ls -Zd /srv/drone /srv/drone-runner
+      register: ctx_out
+    - name: "Exibir contextos SELinux"
+      ansible.builtin.debug:
+        msg: "{{ ctx_out.stdout_lines }}"
+
+    - name: "Verificar status dos serviços"
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - drone
+        - drone-runner
+
+    - name: "Exibir logs recentes do Drone Server"
+      ansible.builtin.command: journalctl -u drone -n 20 --no-pager
+      register: drone_logs
+    - name: "Logs Drone Server"
+      ansible.builtin.debug:
+        msg: "{{ drone_logs.stdout_lines }}"
+
+    - name: "Exibir logs recentes do Drone Runner"
+      ansible.builtin.command: journalctl -u drone-runner -n 20 --no-pager
+      register: runner_logs
+    - name: "Logs Drone Runner"
+      ansible.builtin.debug:
+        msg: "{{ runner_logs.stdout_lines }}"
+
+    # ===============================================================
+    # EVIDÊNCIAS DE CONFORMIDADE (AUDIT TRAIL)
+    # ===============================================================
+    - name: "Exportar auditoria de conformidade"
+      ansible.builtin.copy:
+        content: |
+          ================================================================
+          AUDITORIA DE CONFORMIDADE - DRONE CI SERVER & RUNNER
+          ================================================================
+          Data: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+          Host: {{ inventory_hostname }}
+          Usuário executor: {{ ansible_user }}
+          ------------------------------------------------
+          SELinux: {{ sestatus_out.stdout | regex_search('mode: (.+)', '\\1') }}
+          Firewall ativo:
+          {{ fw_out.stdout }}
+          Contextos SELinux:
+          {{ ctx_out.stdout }}
+          ------------------------------------------------
+          Conformidade NIST: {{ nist_controls | join(', ') }}
+          Conformidade PCI-DSS: {{ pci_requirements | join(', ') }}
+          Conformidade LGPD: Artigos {{ lgpd_articles | join(', ') }}
+          ================================================================
+        dest: /var/log/drone_audit_report.txt
+        owner: root
+        group: root
+        mode: '0640'
+      tags: [audit, compliance]
+

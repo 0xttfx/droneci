@@ -1,0 +1,33 @@
+[Unit]
+Description=Drone Docker Runner
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=-{{ drone_runner_data_dir }}/.env
+ExecStart=/usr/bin/docker run \
+  --name drone-runner \
+  --env-file {{ drone_runner_data_dir }}/.env \
+  --user {{ drone_user }}:{{ drone_group }} \
+  --cap-drop=ALL \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=64M \
+  --volume /var/run/docker.sock:/var/run/docker.sock:Z \
+  {{ drone_runner_image }}
+ExecStop=/usr/bin/docker stop -t 30 drone-runner
+Restart=on-failure
+RestartSec=5
+User=root
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SELinuxContext=system_u:system_r:container_t:s0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

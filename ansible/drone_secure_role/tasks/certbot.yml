@@ -1,0 +1,46 @@
+---
+# NIST SC-8 / PCI 4.1 / LGPD Art.46
+
+- name: "Instalar Certbot"
+  ansible.builtin.dnf:
+    name:
+      - certbot
+      - python3-certbot
+    state: present
+
+- name: "Criar diretório webroot"
+  ansible.builtin.file:
+    path: "{{ drone_data_dir }}/webroot"
+    state: directory
+    owner: "{{ drone_user }}"
+    group: "{{ drone_group }}"
+    mode: '0755'
+
+- name: "Aplicar contexto SELinux ao webroot"
+  ansible.builtin.command: >
+    semanage fcontext -a -t container_var_lib_t "{{ drone_data_dir }}/webroot(/.*)?"
+  args:
+    warn: false
+  ignore_errors: true
+
+- name: "Restaurar contexto"
+  ansible.builtin.command: restorecon -Rv {{ drone_data_dir }}/webroot
+  args:
+    warn: false
+
+- name: "Emitir certificado via Let's Encrypt (webroot)"
+  ansible.builtin.command: >
+    certbot certonly --webroot
+    -w {{ drone_data_dir }}/webroot
+    -d {{ drone_server_host }}
+    --non-interactive --agree-tos
+    -m {{ drone_admin_email }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ drone_server_host }}/fullchain.pem"
+
+- name: "Habilitar renovação automática"
+  ansible.builtin.systemd:
+    name: certbot-renew.timer
+    enabled: true
+    state: started
+

@@ -1,0 +1,14 @@
+---
+
+- name: Reiniciar Drone Server
+  ansible.builtin.systemd:
+    name: drone
+    state: restarted
+    daemon_reload: true
+
+- name: Reiniciar Drone Runner
+  ansible.builtin.systemd:
+    name: drone-runner
+    state: restarted
+    daemon_reload: true
+

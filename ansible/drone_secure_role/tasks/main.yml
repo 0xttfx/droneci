@@ -1,0 +1,16 @@
+---
+- name: "Configurar SELinux"
+  include_tasks: selinux.yml
+
+- name: "Configurar firewall"
+  include_tasks: firewall.yml
+
+- name: "Configurar Certbot (Let's Encrypt)"
+  include_tasks: certbot.yml
+
+- name: "Configurar Drone Server"
+  include_tasks: server.yml
+
+- name: "Configurar Drone Runner"
+  include_tasks: runner.yml
+

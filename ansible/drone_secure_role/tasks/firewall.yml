@@ -1,0 +1,24 @@
+---
+# NIST 800-41 Rev.1 §3.3 / PCI 1.2 / LGPD Art.46
+
+- name: "Iniciar firewalld"
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: true
+    state: started
+
+- name: "Criar zona dedicada do Drone"
+  ansible.builtin.command: "firewall-cmd --permanent --new-zone={{ drone_firewalld_zone }}"
+  register: zone
+  failed_when: false
+
+- name: "Adicionar interface docker0"
+  ansible.builtin.command: "firewall-cmd --permanent --zone={{ drone_firewalld_zone }} --add-interface=docker0"
+
+- name: "Liberar portas necessárias"
+  ansible.builtin.command: "firewall-cmd --permanent --zone={{ drone_firewalld_zone }} --add-port={{ item }}"
+  loop: "{{ drone_allowed_ports }}"
+
+- name: "Recarregar firewall"
+  ansible.builtin.command: firewall-cmd --reload
+

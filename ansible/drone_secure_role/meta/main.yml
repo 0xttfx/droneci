@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: Thiago T. Faioli a.k.a 0xttfx
+  description: Instalação segura do Drone CI Server + Runner com SELinux e TLS Let's Encrypt
+  license: MIT
+  min_ansible_version: 2.15
+  platforms:
+    - name: EL
+      versions:
+        - 9
+	- 10
+  galaxy_tags:
+    - docker
+    - selinux
+    - drone
+    - tls
+    - security
+

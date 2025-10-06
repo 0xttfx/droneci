@@ -1,0 +1,27 @@
+---
+# NIST SC-7 / PCI 1.4 / LGPD Art.46
+
+- name: "Instalar utilitários SELinux"
+  ansible.builtin.dnf:
+    name: policycoreutils-python-utils
+    state: present
+
+- name: "Ativar SELinux enforcing"
+  ansible.builtin.command: setenforce 1
+  ignore_errors: true
+
+- name: "Aplicar contexto de diretório Drone Server"
+  ansible.builtin.command: semanage fcontext -a -t container_var_lib_t "{{ drone_data_dir }}(/.*)?"
+  args:
+    warn: false
+
+- name: "Aplicar contexto de diretório Drone Runner"
+  ansible.builtin.command: semanage fcontext -a -t container_var_lib_t "{{ drone_runner_data_dir }}(/.*)?"
+  args:
+    warn: false
+
+- name: "Restaurar contextos"
+  ansible.builtin.command: restorecon -Rv {{ drone_data_dir }} {{ drone_runner_data_dir }}
+  args:
+    warn: false
+
