@@ -138,7 +138,7 @@ sudo docker run -d \
 
 ---
 
-8. Unidade Systemd Endurecida (`/etc/systemd/system/drone.service`)
+8. Unidade Systemd hardened (`/etc/systemd/system/drone.service`)
 
 ```bash
 [Unit]
@@ -323,7 +323,7 @@ sudo firewall-cmd --reload
 
 ---
 
-15. Unidade Systemd Endurecida para o Runner
+15. Unidade Systemd hardened para o Runner
 
 ```ini
 [Unit]
